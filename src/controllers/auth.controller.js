@@ -7,6 +7,17 @@ const jwt = require("jsonwebtoken");
 // const foodPartnerModel = require("../model/foodPartner.model");
 const foodPartnerModel = require("../model/foodpartner.model");
 
+const getAuthCookieOptions = () => {
+    const isProd = process.env.NODE_ENV === "production";
+
+    return {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    };
+};
+
 //User Register
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, password } = req.body;
@@ -24,7 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await userModel.create({ fullName, email, password: hashedPassword });
 
     const token = jwt.sign({ id: user._id, }, process.env.JWT_SECRET)
-    res.cookie("token", token)
+    res.cookie("token", token, getAuthCookieOptions())
 
 
     res.status(201).json(new ApiResponse(201, user, "User registered successfully"));
@@ -46,14 +57,18 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id, }, process.env.JWT_SECRET)
-    res.cookie("token", token)
+    res.cookie("token", token, getAuthCookieOptions())
 
     res.status(200).json(new ApiResponse(200, user, "User logged in successfully"));
 });
 
 //logout user
 const logoutUser = asyncHandler(async (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
 
     res.status(200).json(new ApiResponse(200, req.user, "User loaded successfully"));
 });
@@ -87,7 +102,7 @@ const registerFoodPartner = asyncHandler(async (req, res) => {
         id: foodPartner._id,
     }, process.env.JWT_SECRET)
 
-    res.cookie("token", token)
+    res.cookie("token", token, getAuthCookieOptions())
 
     res.status(201).json(
         new ApiResponse(201, foodPartner, "Food partner registered successfully")
@@ -115,7 +130,7 @@ const loginFoodPartner = asyncHandler(async (req, res) => {
         id: foodPartner._id,
     }, process.env.JWT_SECRET)
 
-    res.cookie("token", token)
+    res.cookie("token", token, getAuthCookieOptions())
 
     res.status(200).json(
         new ApiResponse(200, foodPartner, "Food partner logged in successfully")
@@ -123,7 +138,11 @@ const loginFoodPartner = asyncHandler(async (req, res) => {
 })
 
 const logoutFoodPartner = asyncHandler(async (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
     res.status(200).json(
         new ApiResponse(200, req.foodPartner, "Food partner logged out successfully")
     );
