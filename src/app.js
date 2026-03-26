@@ -13,11 +13,12 @@ dotenv.config();
 const cors = require('cors');
 
 const app = express();
+
+// Configure CORS to reflect the requesting origin (needed for Vercel preview URLs)
 app.use(cors({
-    // origin: 'http://localhost:5173',
-    origin: 'https://instazometo-frontend.vercel.app/',
+    origin: true,
     credentials: true
-}))
+}));
 
 app.use(cookieParser());
 app.use(express.json());
